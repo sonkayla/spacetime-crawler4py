@@ -1,5 +1,7 @@
 import re
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
+from PartA import tokenize
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -15,7 +17,25 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    return list()
+
+    # ***** IMPLEMENTATION *****
+    # case that status is not 200; don't extract
+    if resp.status != 200:
+        return []
+    
+    hyperlinks = [] # init hyperlinks to return
+
+    # checking if there's a response and content to parse
+    if resp.raw_response and resp.raw_response.content:
+        soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+        parsedText = soup.get_text() # this is for later can be ignored in this version
+
+    # finding all the '<a' and extracting those as links
+    for aTag in soup.find_all('a', href = True):
+        href = aTag.get('href')
+        hyperlinks.append(href)
+    
+    return hyperlinks
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
