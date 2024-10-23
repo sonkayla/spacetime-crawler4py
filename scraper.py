@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from PartA import tokenize
 
-domains = ["ics", ""]
-
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
