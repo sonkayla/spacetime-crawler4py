@@ -30,7 +30,7 @@ def extract_next_links(url, resp):
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
         parsedText = soup.get_text() # this is for later can be ignored in this version
 
-    # finding all the '<a' and extracting those as links
+    # finding all the '<a>' and extracting those as links
     for aTag in soup.find_all('a', href = True):
         href = aTag.get('href')
         hyperlinks.append(href)
