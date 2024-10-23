@@ -6,6 +6,8 @@ cache server to receive requests.
 CONFIGURATION
 -------------------------
 
+test
+
 ### Step 1: Install dependencies
 
 If you do not have Python 3.6+:
