@@ -1,7 +1,10 @@
 import re
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 from PartA import tokenize
+
+domains = ["ics", ""]
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -33,7 +36,12 @@ def extract_next_links(url, resp):
     # finding all the '<a>' and extracting those as links
     for aTag in soup.find_all('a', href = True):
         href = aTag.get('href')
-        hyperlinks.append(href)
+
+        # 2. making sure to defragment the URLs, i.e. remove the fragment part.
+        if href:
+            fullUrl = urljoin(resp.raw_response.url, href)
+            defragmentedUrl = fullUrl.split('#')[0]
+            hyperlinks.append(defragmentedUrl)
     
     return hyperlinks
 
@@ -45,6 +53,14 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
+        
+        # making sure to return only URLs that are within the domains and paths mentioned
+        validDomains = [".ics.uci.edu", ".cs.uci.edu", ".informatics.uci.edu", 
+                   ".stat.uci.edu", "today.uci.edu/department/information_computer_sciences"]
+        
+        if not any(domain in parsed.netloc for domain in validDomains):
+            return False
+    
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
