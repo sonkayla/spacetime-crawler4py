@@ -1,7 +1,6 @@
 import re
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, parse_qs
 from PartA import tokenize
 
 def scraper(url, resp):
@@ -57,6 +56,10 @@ def is_valid(url):
                    ".stat.uci.edu", "today.uci.edu/department/information_computer_sciences"]
         
         if not any(domain in parsed.netloc for domain in validDomains):
+            return False
+        
+        query_params = parse_qs(parsed.query)
+        if "C" in query_params:
             return False
     
         return not re.match(
