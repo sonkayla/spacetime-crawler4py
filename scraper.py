@@ -59,7 +59,9 @@ def is_valid(url):
             return False
         
         query_params = parse_qs(parsed.query)
-        if "C" in query_params:
+        excluded_params = {"C", "do", "tab_files", "tab_details", "image"}
+
+        if any(param in query_params for param in excluded_params):
             return False
     
         return not re.match(
