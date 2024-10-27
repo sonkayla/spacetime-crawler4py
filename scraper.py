@@ -100,7 +100,7 @@ def is_valid(url):
             return False
         
         query_params = parse_qs(parsed.query)
-        excluded_params = {"C", "do", "tab_files", "tab_details", "image"}
+        excluded_params = {"C", "do", "tab_files", "tab_details", "image", "mailto", "tell"}
 
         if any(param in query_params for param in excluded_params):
             return False
