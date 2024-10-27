@@ -1,10 +1,22 @@
 import re
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse, parse_qs
-from PartA import tokenize
+from PartA import tokenize, computeWordFrequencies
+from collections import defaultdict
+from simhash import simhash, similarity
+
+from reportHelper import printSubdomains, printUniquePagesAmt
+
+uniquePages = defaultdict(int)
+uciSubdomains = defaultdict(int)
+
+simhashList = []
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
+
+    printUniquePagesAmt(uniquePages)
+    printSubdomains(uciSubdomains)
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
@@ -28,17 +40,36 @@ def extract_next_links(url, resp):
     # checking if there's a response and content to parse
     if resp.raw_response and resp.raw_response.content:
         soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-        parsedText = soup.get_text() # this is for later can be ignored in this version
+        
+        parsedText = soup.get_text()
+        tokens = tokenize(parsedText) 
+        
+        # retireving all .uci.edu subdomains (QUESTION 4)
+        if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
+            uciSubdomains[urlparse(resp.raw_response.url).scheme +
+                                "://" + urlparse(resp.raw_response.url).netloc] += 1
+            
+        # avoid URLs with no text
+        if len(parsedText) == 0:
+            return hyperlinks
 
-    # finding all the '<a>' and extracting those as links
-    for aTag in soup.find_all('a', href = True):
-        href = aTag.get('href')
+        # exact and near webpage similarity detection using simhash
+        simhashVal = simhash(computeWordFrequencies(tokens))
+        for i in simhashList:
+            if similarity(simhashVal, i) >= 0.82:
+                return hyperlinks
+        simhashList.append(simhashVal)
+        
+        # finding all the '<a>' and extracting those as links
+        for aTag in soup.find_all('a', href = True):
+            href = aTag.get('href')
 
-        # 2. making sure to defragment the URLs, i.e. remove the fragment part.
-        if href:
-            fullUrl = urljoin(resp.raw_response.url, href)
-            defragmentedUrl = fullUrl.split('#')[0]
-            hyperlinks.append(defragmentedUrl)
+            # making sure to defragment the URLs, i.e. remove the fragment part.
+            if href:
+                fullUrl = urljoin(resp.raw_response.url, href)
+                defragmentedUrl = fullUrl.split('#')[0]
+                uniquePages[defragmentedUrl] += 1 # adding unique page, not including after fragment (QUESTION 1)
+                hyperlinks.append(defragmentedUrl)
     
     return hyperlinks
 
@@ -72,7 +103,7 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()) 
 
     except TypeError:
         print ("TypeError for ", parsed)
