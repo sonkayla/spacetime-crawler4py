@@ -10,7 +10,6 @@ from reportHelper import printSubdomains, printUniquePagesAmt, printMaxWordCount
 
 uniquePages = defaultdict(int)
 uciSubdomains = defaultdict(int)
-
 simhashList = []
 
 def scraper(url, resp):
@@ -45,30 +44,44 @@ def extract_next_links(url, resp):
         parsedText = soup.get_text()
         tokens = tokenize(parsedText) 
 
-        # comparing and tracking max word count of the url that was read
-        totalTokens = len(tokens) # counting total tokens which are words
-        # print("current maxwordcount:", mwc.MaxWordCount[1])
-        # print("total tokens read in this link:", totalTokens)
-        if totalTokens > mwc.MaxWordCount[1]:
-            mwc.MaxWordCount[0] = url
-            mwc.MaxWordCount[1] = totalTokens
-            printMaxWordCount(mwc.MaxWordCount[0], mwc.MaxWordCount[1])
+        defragmented_url = resp.raw_response.url.split('#')[0]
         
-        # retireving all .uci.edu subdomains (QUESTION 4)
-        if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
-            uciSubdomains[urlparse(resp.raw_response.url).scheme +
-                                "://" + urlparse(resp.raw_response.url).netloc] += 1
-            
-        # avoid URLs with no text
-        if len(parsedText) == 0:
-            return hyperlinks
+        if is_valid(defragmented_url):
+            uniquePages[defragmented_url] += 1 
+            if uniquePages[defragmented_url] == 1:
 
-        # exact and near webpage similarity detection using simhash
-        simhashVal = simhash(computeWordFrequencies(tokens))
-        for i in simhashList:
-            if similarity(simhashVal, i) >= 0.82:
-                return hyperlinks
-        simhashList.append(simhashVal)
+                # comparing and tracking max word count of the url that was read
+                totalTokens = len(tokens) # counting total tokens which are words
+                # print("current maxwordcount:", mwc.MaxWordCount[1])
+                # print("total tokens read in this link:", totalTokens)
+                if totalTokens > mwc.MaxWordCount[1]:
+                    mwc.MaxWordCount[0] = url
+                    mwc.MaxWordCount[1] = totalTokens
+                    printMaxWordCount(mwc.MaxWordCount[0], mwc.MaxWordCount[1])
+                
+                # retireving all .uci.edu subdomains (QUESTION 4)
+                parsed_url = urlparse(defragmented_url)
+                hostname = parsed_url.hostname.lower()
+                if hostname.endswith('.uci.edu'):
+                    subdomain_url = parsed_url.scheme + "://" + hostname
+                    uciSubdomains[subdomain_url] += 1
+
+                # if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
+                #     uciSubdomains[urlparse(resp.raw_response.url).scheme +
+                #                         "://" + urlparse(resp.raw_response.url).netloc] += 1
+                    
+                # avoid URLs with no text
+                if len(parsedText.strip()) == 0:
+                    return []
+
+                # exact and near webpage similarity detection using simhash
+                simhashVal = simhash(computeWordFrequencies(tokens))
+                for i in simhashList:
+                    if similarity(simhashVal, i) >= 0.82:
+                        return []
+                simhashList.append(simhashVal)
+        else:
+            return []
         
         # finding all the '<a>' and extracting those as links
         for aTag in soup.find_all('a', href = True):
@@ -78,8 +91,10 @@ def extract_next_links(url, resp):
             if href:
                 fullUrl = urljoin(resp.raw_response.url, href)
                 defragmentedUrl = fullUrl.split('#')[0]
-                uniquePages[defragmentedUrl] += 1 # adding unique page, not including after fragment (QUESTION 1)
-                hyperlinks.append(defragmentedUrl)
+                if is_valid(defragmentedUrl):
+                    hyperlinks.append(defragmentedUrl)
+                # uniquePages[defragmentedUrl] += 1 # adding unique page, not including after fragment (QUESTION 1)
+                # hyperlinks.append(defragmentedUrl)
     
     return hyperlinks
 
@@ -100,7 +115,7 @@ def is_valid(url):
             return False
         
         query_params = parse_qs(parsed.query)
-        excluded_params = {"C", "do", "tab_files", "tab_details", "image", "mailto", "tell"}
+        excluded_params = {"C", "do", "tab_files", "tab_details", "image", "mailto", "tel"}
 
         if any(param in query_params for param in excluded_params):
             return False
