@@ -14,3 +14,7 @@ def printSubdomains(pageList):
         # sort (netloc) alphabetically
         for subdomain, count in sorted(pageList.items(), key=(lambda pageCount: urlparse(pageCount[0]).netloc.lower())):
             f.write(f"{subdomain}, {count}\n")
+
+def printMaxWordCount(url, tokenCount):
+    with open("MaxWordCount.txt", "w") as f:
+        f.write(f"{url} = {tokenCount}\n")

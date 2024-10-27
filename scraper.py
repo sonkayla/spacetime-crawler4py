@@ -5,7 +5,8 @@ from PartA import tokenize, computeWordFrequencies
 from collections import defaultdict
 from simhash import simhash, similarity
 
-from reportHelper import printSubdomains, printUniquePagesAmt
+from MaxWordCount import MaxWordCount as mwc
+from reportHelper import printSubdomains, printUniquePagesAmt, printMaxWordCount
 
 uniquePages = defaultdict(int)
 uciSubdomains = defaultdict(int)
@@ -43,6 +44,15 @@ def extract_next_links(url, resp):
         
         parsedText = soup.get_text()
         tokens = tokenize(parsedText) 
+
+        # comparing and tracking max word count of the url that was read
+        totalTokens = len(tokens) # counting total tokens which are words
+        # print("current maxwordcount:", mwc.MaxWordCount[1])
+        # print("total tokens read in this link:", totalTokens)
+        if totalTokens > mwc.MaxWordCount[1]:
+            mwc.MaxWordCount[0] = url
+            mwc.MaxWordCount[1] = totalTokens
+            printMaxWordCount(mwc.MaxWordCount[0], mwc.MaxWordCount[1])
         
         # retireving all .uci.edu subdomains (QUESTION 4)
         if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
@@ -103,6 +113,7 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|apk|cc|cpp|h|dsp"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()) 
 
     except TypeError:
