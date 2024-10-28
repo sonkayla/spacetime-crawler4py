@@ -4,19 +4,24 @@ from urllib.parse import urljoin, urlparse, parse_qs
 from PartA import tokenize, computeWordFrequencies
 from collections import defaultdict
 from simhash import simhash, similarity
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
 
 from MaxWordCount import MaxWordCount as mwc
-from reportHelper import printSubdomains, printUniquePagesAmt, printMaxWordCount
+from reportHelper import printSubdomains, printUniquePagesAmt, printMaxWordCount, printFrequencies
 
 uniquePages = defaultdict(int)
 uciSubdomains = defaultdict(int)
 simhashList = []
+tokenFreq = {}
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
 
     printUniquePagesAmt(uniquePages)
     printSubdomains(uciSubdomains)
+    printFrequencies(tokenFreq)
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
@@ -44,6 +49,15 @@ def extract_next_links(url, resp):
         parsedText = soup.get_text()
         tokens = tokenize(parsedText) 
 
+        #getting all tokens and putting into map
+        stop_words = set(stopwords.words('english'))
+        for t in tokens:
+            if t not in stop_words:
+                if t in tokenFreq:
+                    tokenFreq[t] += 1
+                else:
+                    tokenFreq[t] = 1
+        
         defragmented_url = resp.raw_response.url.split('#')[0]
         
         if is_valid(defragmented_url):

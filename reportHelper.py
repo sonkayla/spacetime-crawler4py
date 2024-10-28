@@ -1,5 +1,9 @@
 from typing import List
 from urllib.parse import urlparse
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+from itertools import islice
 
 def printUniquePagesAmt(pageList):
     with open("uniquePages.txt", "w") as f:
@@ -18,3 +22,13 @@ def printSubdomains(pageList):
 def printMaxWordCount(url, tokenCount):
     with open("MaxWordCount.txt", "w") as f:
         f.write(f"{url} = {tokenCount}\n")
+
+def printFrequencies(freq):
+    sortedFreq = dict(sorted(freq.items(), key=lambda item: item[1], reverse=True))
+    N = 100
+    sortedFreq50 = dict(islice(sortedFreq.items(), N))
+
+    with open("tokenFreq.txt", "w") as f:
+        f.write("Token List:\n")
+        for key, value in sortedFreq50.items():
+            f.write(f"{key}, {str(value)}\n")
