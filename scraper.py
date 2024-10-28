@@ -49,6 +49,13 @@ def extract_next_links(url, resp):
         parsedText = soup.get_text()
         tokens = tokenize(parsedText) 
 
+        # comparing and tracking max word count of the url that was read
+        totalTokens = len(tokens) # counting total tokens which are words
+        if totalTokens > mwc.MaxWordCount[1]:
+            mwc.MaxWordCount[0] = url
+            mwc.MaxWordCount[1] = totalTokens
+            printMaxWordCount(mwc.MaxWordCount[0], mwc.MaxWordCount[1])
+
         #getting all tokens and putting into map
         stop_words = set(stopwords.words('english'))
         for t in tokens:
@@ -63,15 +70,6 @@ def extract_next_links(url, resp):
         if is_valid(defragmented_url):
             uniquePages[defragmented_url] += 1 
             if uniquePages[defragmented_url] == 1:
-
-                # comparing and tracking max word count of the url that was read
-                totalTokens = len(tokens) # counting total tokens which are words
-                # print("current maxwordcount:", mwc.MaxWordCount[1])
-                # print("total tokens read in this link:", totalTokens)
-                if totalTokens > mwc.MaxWordCount[1]:
-                    mwc.MaxWordCount[0] = url
-                    mwc.MaxWordCount[1] = totalTokens
-                    printMaxWordCount(mwc.MaxWordCount[0], mwc.MaxWordCount[1])
                 
                 # retireving all .uci.edu subdomains (QUESTION 4)
                 parsed_url = urlparse(defragmented_url)
@@ -124,13 +122,11 @@ def is_valid(url):
         # making sure to return only URLs that are within the domains and paths mentioned
         validDomains = [".ics.uci.edu", ".cs.uci.edu", ".informatics.uci.edu", 
                    ".stat.uci.edu", "today.uci.edu/department/information_computer_sciences"]
-        
         if not any(domain in parsed.netloc for domain in validDomains):
             return False
         
         query_params = parse_qs(parsed.query)
         excluded_params = {"C", "do", "tab_files", "tab_details", "image", "mailto", "tel"}
-
         if any(param in query_params for param in excluded_params):
             return False
     
