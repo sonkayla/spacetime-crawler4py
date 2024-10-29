@@ -11,6 +11,7 @@ nltk.download('stopwords')
 from MaxWordCount import MaxWordCount as mwc
 from reportHelper import printSubdomains, printUniquePagesAmt, printMaxWordCount, printFrequencies
 
+pages = 0
 uniquePages = defaultdict(int)
 uciSubdomains = defaultdict(int)
 simhashList = []
@@ -19,7 +20,7 @@ tokenFreq = {}
 def scraper(url, resp):
     links = extract_next_links(url, resp)
 
-    printUniquePagesAmt(uniquePages)
+    printUniquePagesAmt(uniquePages, pages)
     printSubdomains(uciSubdomains)
     printFrequencies(tokenFreq)
     return [link for link in links if is_valid(link)]
@@ -37,6 +38,8 @@ def extract_next_links(url, resp):
 
     # ***** IMPLEMENTATION *****
     # case that status is not 200; don't extract
+    global pages
+    
     if resp.status != 200:
         return []
     
@@ -56,7 +59,7 @@ def extract_next_links(url, resp):
             mwc.MaxWordCount[1] = totalTokens
             printMaxWordCount(mwc.MaxWordCount[0], mwc.MaxWordCount[1])
 
-        #getting all tokens and putting into map
+        # getting all tokens and putting into map
         stop_words = set(stopwords.words('english'))
         for t in tokens:
             if t not in stop_words:
@@ -65,35 +68,20 @@ def extract_next_links(url, resp):
                 else:
                     tokenFreq[t] = 1
         
-        defragmented_url = resp.raw_response.url.split('#')[0]
-        
-        if is_valid(defragmented_url):
-            uniquePages[defragmented_url] += 1 
-            if uniquePages[defragmented_url] == 1:
-                
-                # retireving all .uci.edu subdomains (QUESTION 4)
-                parsed_url = urlparse(defragmented_url)
-                hostname = parsed_url.hostname.lower()
-                if hostname.endswith('.uci.edu'):
-                    subdomain_url = parsed_url.scheme + "://" + hostname
-                    uciSubdomains[subdomain_url] += 1
-
-                # if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
-                #     uciSubdomains[urlparse(resp.raw_response.url).scheme +
-                #                         "://" + urlparse(resp.raw_response.url).netloc] += 1
+        # retireving all .uci.edu subdomains (QUESTION 4)
+        if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
+            uciSubdomains[urlparse(resp.raw_response.url).scheme + "://" + urlparse(resp.raw_response.url).netloc] += 1
                     
-                # avoid URLs with no text
-                if len(parsedText.strip()) == 0:
-                    return []
+        # avoid URLs with no text
+        if len(parsedText.strip()) == 0:
+            return hyperlinks
 
-                # exact and near webpage similarity detection using simhash
-                simhashVal = simhash(computeWordFrequencies(tokens))
-                for i in simhashList:
-                    if similarity(simhashVal, i) >= 0.82:
-                        return []
-                simhashList.append(simhashVal)
-        else:
-            return []
+        # exact and near webpage similarity detection using simhash
+        simhashVal = simhash(computeWordFrequencies(tokens))
+        for i in simhashList:
+            if similarity(simhashVal, i) >= 0.82:
+                return hyperlinks
+        simhashList.append(simhashVal)
         
         # finding all the '<a>' and extracting those as links
         for aTag in soup.find_all('a', href = True):
@@ -103,10 +91,13 @@ def extract_next_links(url, resp):
             if href:
                 fullUrl = urljoin(resp.raw_response.url, href)
                 defragmentedUrl = fullUrl.split('#')[0]
+                
+                pages += 1
+
                 if is_valid(defragmentedUrl):
-                    hyperlinks.append(defragmentedUrl)
+                    uniquePages[defragmentedUrl] += 1
                 # uniquePages[defragmentedUrl] += 1 # adding unique page, not including after fragment (QUESTION 1)
-                # hyperlinks.append(defragmentedUrl)
+                hyperlinks.append(defragmentedUrl)
     
     return hyperlinks
 

@@ -5,11 +5,12 @@ from nltk.corpus import stopwords
 nltk.download('stopwords')
 from itertools import islice
 
-def printUniquePagesAmt(pageList):
+def printUniquePagesAmt(uniqueList, pages):
     with open("uniquePages.txt", "w") as f:
-        f.write(f"Number of unique pages found: {len(pageList)}\n")
+        f.write(f"Number of pages found: {pages}\n")
+        f.write(f"Number of unique pages found: {len(uniqueList)}\n")
         # sort (netloc) alphabetically
-        for url, count in sorted(pageList.items(), key=(lambda pageCount: urlparse(pageCount[0]).netloc.lower())):
+        for url, count in sorted(uniqueList.items(), key=(lambda pageCount: urlparse(pageCount[0]).netloc.lower())):
             f.write(f"{url}, {count}\n")
 
 def printSubdomains(pageList):
