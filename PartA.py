@@ -6,14 +6,16 @@ import sys
 def tokenize(text):
 
     lowercase_text = text.lower()
-
-    tokens = [""]
+    tokens = []
+    current_token = ""
 
     for i in lowercase_text:
         if ord('a') <= ord(i) <= ord('z') or ord('0') <= ord(i) <= ord('9'):
-            tokens[-1] += i
-        elif tokens[-1] != "":
-            tokens.append('')
+            current_token += i
+        elif current_token:
+            if len(current_token) > 1: # only adds to token list if token is greater than 1 letter
+                tokens.append(current_token)
+            current_token = "" #resets token if it is a 1 letter token
             
     return tokens
 

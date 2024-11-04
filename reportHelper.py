@@ -16,8 +16,8 @@ def printUniquePagesAmt(uniqueList, pages):
 def printSubdomains(pageList):
     with open("subDomains.txt", "w") as f:
         f.write(f"Number of subdomains for .uci.edu pages = {len(pageList)}\n")
-        # sort (netloc) alphabetically
-        for subdomain, count in sorted(pageList.items(), key=(lambda pageCount: urlparse(pageCount[0]).netloc.lower())):
+        # sort alphabetically
+        for subdomain, count in sorted(pageList.items(), key=lambda pageCount: pageCount[0].lower()):
             f.write(f"{subdomain}, {count}\n")
 
 def printMaxWordCount(url, tokenCount):

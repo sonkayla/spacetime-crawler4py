@@ -70,7 +70,9 @@ def extract_next_links(url, resp):
         
         # retireving all .uci.edu subdomains (QUESTION 4)
         if ".uci.edu" in urlparse(resp.raw_response.url).netloc:
-            uciSubdomains[urlparse(resp.raw_response.url).scheme + "://" + urlparse(resp.raw_response.url).netloc] += 1
+            domain = urlparse(resp.raw_response.url).netloc
+            uciSubdomains[domain] += 1
+            # uciSubdomains[urlparse(resp.raw_response.url).scheme + "://" + urlparse(resp.raw_response.url).netloc] += 1
                     
         # avoid URLs with no text
         if len(parsedText.strip()) == 0:
@@ -112,13 +114,16 @@ def is_valid(url):
         
         # making sure to return only URLs that are within the domains and paths mentioned
         validDomains = [".ics.uci.edu", ".cs.uci.edu", ".informatics.uci.edu", 
-                   ".stat.uci.edu", "today.uci.edu/department/information_computer_sciences"]
+                   ".stat.uci.edu", ".today.uci.edu"]
         if not any(domain in parsed.netloc for domain in validDomains):
             return False
         
         query_params = parse_qs(parsed.query)
         excluded_params = {"C", "do", "tab_files", "tab_details", "image", "mailto", "tel"}
         if any(param in query_params for param in excluded_params):
+            return False
+        # check for today.uci.edu/department/information_computer_sciences path
+        if parsed.netloc == "today.uci.edu" and not parsed.path.startswith("/department/information_computer_sciences"):
             return False
     
         return not re.match(
@@ -127,9 +132,9 @@ def is_valid(url):
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|apk|cc|cpp|h|dsp"
+            + r"|epub|dll|cnf|tgz|sha1|ppsx|sql|c|java|py"
+            + r"|thmx|mso|arff|rtf|jar|csv|xml|Z|db|pps"
+            + r"|apk|cc|cpp|h|dsp|bigwig|bed|bw|nb"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()) 
 
     except TypeError:
