@@ -5,7 +5,7 @@
 
 import hashlib
 
-# convering each token into a binary hash representation with SHA-256
+# converting each token into a binary hash representation with SHA-256
 def hash(token):
     hex = hashlib.sha256(token.encode()).hexdigest() # hashing token
     binary = bin(int(hex, 16))[2:] # convert hex --> binary
