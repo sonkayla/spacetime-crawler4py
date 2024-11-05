@@ -5,15 +5,18 @@
 
 import hashlib
 
+# convering each token into a binary hash representation with SHA-256
 def hash(token):
-    hex = hashlib.sha256(token.encode()).hexdigest()
-    binary = bin(int(hex, 16))[2:]
-    return "{:0>256}".format(binary)
+    hex = hashlib.sha256(token.encode()).hexdigest() # hashing token
+    binary = bin(int(hex, 16))[2:] # convert hex --> binary
+    return "{:0>256}".format(binary) # ensuring 256 bits with padding
 
+# creating 256-bit fingerprint for entire document with weighted summing based on token frequencies
 def simhash(freqDict):
 
     vectorSum = 256 * [0]
 
+    # adding freq if bit is 1 and subtracting if bit is 0
     for i in range(len(vectorSum)):
         for token, freq in freqDict.items():
             
@@ -24,6 +27,7 @@ def simhash(freqDict):
             elif binary[i] == "0":
                 vectorSum[i] -= freq
 
+    # creating the fingerprint by checking sign of each element in vectorSum
     fingerprint = []
     
     for bit in vectorSum:
@@ -34,9 +38,11 @@ def simhash(freqDict):
     
     return fingerprint
 
+# calculating the similarity between two SimHash fingerprints by computing the proportion of matching bits
 def similarity(simhash1, simhash2):
     same = 0
     
+    # counting matching bits and calc similarity
     for i in range(len(simhash1)):
         if simhash1[i] == simhash2[i]:
             same += 1
